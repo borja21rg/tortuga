@@ -1,0 +1,14 @@
+>> Requisitos de la primera semana
+Que logre moverse sin comandos.
+
+>> Lista de pendientes del esprint.
+- Descripción del reparto o asignación de tareas:
+Tortuga = Mario
+Punto y línea = Borja
+Gráfico = Dani
+Sesión = Fredo
+Diagrama de clases = Esther
+
+¡¡PENDIENTE SUBIR CÓDIGO ESTHER TORTUGA MOVIÉNDOSE"
+
+"Incremento" poco a poco.
