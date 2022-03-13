@@ -20,10 +20,6 @@ if (!isset($_SESSION['arrayfiguras'])) {
   $arrayfiguras = $_SESSION['arrayfiguras'];
 }
 
-/*Revisar esta variable sesión *Esther
-No es necesario que sea de sesión por el momento
-pero lo dejo así pq funciona y pensando en un futuro
-*/
 if(!isset( $_SESSION['array'])) {
   $array=[];
   $_SESSION['array'] = $array;
@@ -32,8 +28,15 @@ if(!isset( $_SESSION['array'])) {
   $array=$_SESSION['array'];
 }
 
+if(!isset( $_SESSION['comando'])) {
+  $arrayComandos=[];
+  $_SESSION['comando'] = $arrayComandos;
 
-//Recogemos el valor de coordendas de la tortuga antes de ser modificada
+} else {
+  $arrayComandos=$_SESSION['comando'];
+}
+
+//COMANDOS
 foreach ($arrayfiguras->getArray() as $elemento) {
 
   $x=$elemento->getCentro()->getX();
@@ -41,10 +44,10 @@ foreach ($arrayfiguras->getArray() as $elemento) {
   $_SESSION['array']=[$x, $y];
 }
 
-//Comandos
-if (isset($_POST['comandos']) && $_POST['comandos']!="") {
+if (isset($_POST['comandos'])) {
   $input = $_POST['comandos'];
   $comandos = explode(" ", $input);
+  // $_SESSION['comando'][]=$comandos;
 
   foreach ($arrayfiguras->getArray() as $elemento) {
 
@@ -52,21 +55,27 @@ if (isset($_POST['comandos']) && $_POST['comandos']!="") {
         if ($comandos[$i] == "adelante" || $comandos[$i] == "ad") {
           if (is_numeric($comandos[($i + 1)])) {
             $elemento->animar(($comandos[($i + 1)]));
+            //$elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]);
+            
           }
   
         } elseif ($comandos[$i] == "atras" || $comandos[$i] == "at") {
           if (is_numeric($comandos[($i + 1)])) {
             $elemento->animar((-$comandos[($i + 1)]));
+            //$elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]);
+            //$elemento->guardar($elemento->getCentro()->getX(), $elemento->getCentro()->Y());
           }
   
         } elseif ($comandos[$i] == "derecha" || $comandos[$i] == "de") {
           if (is_numeric($comandos[($i + 1)])) {
             $elemento->setAngulo($comandos[($i + 1)]);
+           
           }
   
         } elseif ($comandos[$i] == "izquierda" || $comandos[$i] == "iz") {
           if (is_numeric($comandos[($i + 1)])) {
             $elemento->setAngulo(- ($comandos[($i + 1)]));
+            
           }
   
         } elseif ($comandos[$i] == "borrarpantalla" || $comandos[$i] == "bp") {
@@ -98,11 +107,11 @@ if (isset($_POST['comandos']) && $_POST['comandos']!="") {
             // repeat 4 [ ad 50 de 90 ad 50 ]
           }
         }
-      }
+      }   
     }
 }
 
-
+// print_r($_SESSION['comando']);
 print_r($_SESSION['array']);
 
 ?>
@@ -128,10 +137,14 @@ print_r($_SESSION['array']);
 
 
       <?php
-      foreach ($arrayfiguras->getArray() as $elemento) {
+      for ($i=0; $i<(count($_SESSION['array'])) ; $i++) { 
+        
+      }
+      foreach ($arrayfiguras->getArray() as $key =>$elemento) {
         echo $elemento->dibujar();
-        $elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]);
+       $elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]);
         $elemento->dibujarLinea();
+       
       }
       ?>
       <!-- <line x1=150 y1=500 x2=400 y2=250 stroke="red" stroke-width=2 /> -->
@@ -145,6 +158,7 @@ print_r($_SESSION['array']);
       <button type="submit" value="Enviar">Enviar</button>
     </form>
     <a href="./cerrrarSesion.php"><button>Cerrar sesión</button></a>
+   
   </div>
 </body>
 

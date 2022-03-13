@@ -6,13 +6,16 @@
 	session_destroy();
 	try {
 		// require("./configConexionBBDD.php");
-		$dsn = 'mysql:dbname=bdLinea;host=db';
+		$dsn = 'mysql:dbname=bdLogo;host=db';
 		$usuario = 'alumnado';
 		$clave = 'alumnado';
 
 		$bd=new PDO($dsn, $usuario, $clave);
 		$bd->exec("set character set utf8");
 		$resultado=$bd->query("delete from linea");
+
+		// return $this->circulos;
+
 	   
 	} catch (PDOException $e) {
 		print "    <p>Error: No puede conectarse con la base de datos.</p>\n";

@@ -1,5 +1,5 @@
 <?php
-    $dsn = 'mysql:dbname=bdLinea;host=db';
+    $dsn = 'mysql:dbname=bdLogo;host=db';
     $usuario = 'alumnado';
     $clave = 'alumnado';
 ?>
