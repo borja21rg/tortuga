@@ -2,6 +2,7 @@
 
 class Grafico {
     protected $visible = true;
+    protected bool $pintar = true;
 
     public function mostrar() {
         $this ->visible = true;
@@ -17,22 +18,30 @@ class Grafico {
         }else{
             return 0;
         }
-        //return $this->visible;
+        
     }
+
+    public function getPintar() {
+        if($this->pintar == true){
+            return 1;
+        }else{
+            return 0;
+        }
+
+    }
+    public function setPintar($pintar) {
+        $this->pintar = $pintar;
+    }
+    
     public function setvisible($visible) {
         $this->visible = $visible;
     }
 
-    public function dibujar(): string{
-        return (" ");
+    public function dibujar(){
+       
     }
-/*     public function animar($x,$y) {
-
-    } */
 
     public function mover($x, $y) {}
 
     public function desplazar($x, $y) {}
 }
-
-?>

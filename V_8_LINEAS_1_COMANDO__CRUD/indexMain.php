@@ -2,170 +2,365 @@
 spl_autoload_register("cargaClases");
 
 /* Función para llamar a todas las clases */
-  function cargaClases($nombreClase)
-  {
-    require_once "./Clases/" . $nombreClase . '.php';
-  }
+function cargaClases($nombreClase)
+{
+  require_once "./Clases/" . $nombreClase . '.php';
+}
 
- //Iniciamos una sesión. En caso de NO existir, muestra la página en blanco.
+//Iniciamos una sesión. En caso de NO existir, muestra la página en blanco.
 session_start();
 
-// VARIABLES SESIÓN
-if (!isset($_SESSION['arrayfiguras'])) {
-  $arrayfiguras = new AppWebLogo();
-  $_SESSION['arrayfiguras'] = $arrayfiguras;
-  $tortuga = new Tortuga(400, 250, 0);
-  $arrayfiguras->aniadir($tortuga);
-} else {
-  $arrayfiguras = $_SESSION['arrayfiguras'];
-}
+if (!isset($_SESSION['activa'])) {
+  echo " ";
+  //Si existe y la sesion tiene el perfil Profesor iniciara sesion como administrador
+} elseif ($_SESSION['perfil'] == "Profesor") {
 
-if(!isset( $_SESSION['array'])) {
-  $array=[];
-  $_SESSION['array'] = $array;
+  /* Introducir las cosas que puede editar el profesor */
 
-} else {
-  $array=$_SESSION['array'];
-}
+  // VARIABLES SESIÓN
+  if (!isset($_SESSION['arrayfiguras'])) {
+    $arrayfiguras = new AppWebLogo();
+    $_SESSION['arrayfiguras'] = $arrayfiguras;
+    $tortuga = new Tortuga(400, 250, 0);
+    //$tortuga->guardar(400,250);
+    $arrayfiguras->aniadir($tortuga);
+  } else {
+    $arrayfiguras = $_SESSION['arrayfiguras'];
+  }
 
-if(!isset( $_SESSION['comando'])) {
-  $arrayComandos=[];
-  $_SESSION['comando'] = $arrayComandos;
+  if (!isset($_SESSION['array'])) {
+    $array = [];
+    $_SESSION['array'] = $array;
+  } else {
+    $array = $_SESSION['array'];
+  }
 
-} else {
-  $arrayComandos=$_SESSION['comando'];
-}
+  if (!isset($_SESSION['comando'])) {
+    $arrayComandos = [];
+    $_SESSION['comando'] = $arrayComandos;
+  } else {
+    $arrayComandos = $_SESSION['comando'];
+  }
 
-//COMANDOS
-foreach ($arrayfiguras->getArray() as $elemento) {
-
-  $x=$elemento->getCentro()->getX();
-  $y=$elemento->getCentro()->getY();
-  $_SESSION['array']=[$x, $y];
-}
-
-if (isset($_POST['comandos'])) {
-  $input = $_POST['comandos'];
-  $comandos = explode(" ", $input);
-  // $_SESSION['comando'][]=$comandos;
-
+  //COMANDOS
   foreach ($arrayfiguras->getArray() as $elemento) {
+
+    $x = $elemento->getCentro()->getX();
+    $y = $elemento->getCentro()->getY();
+    $_SESSION['array'] = [$x, $y];
+  }
+
+  if (isset($_POST['comandos'])) {
+    $input = $_POST['comandos'];
+    $comandos = explode(" ", $input);
+
+
+    foreach ($arrayfiguras->getArray() as $elemento) {
 
       for ($i = 0; $i < count($comandos); $i++) {
         if ($comandos[$i] == "adelante" || $comandos[$i] == "ad") {
           if (is_numeric($comandos[($i + 1)])) {
             $elemento->animar(($comandos[($i + 1)]));
-            //$elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]);
-            
+            $elemento->guardar($elemento->getCentro()->getx(), $elemento->getCentro()->getY());
           }
-  
         } elseif ($comandos[$i] == "atras" || $comandos[$i] == "at") {
           if (is_numeric($comandos[($i + 1)])) {
             $elemento->animar((-$comandos[($i + 1)]));
-            //$elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]);
-            //$elemento->guardar($elemento->getCentro()->getX(), $elemento->getCentro()->Y());
+            $elemento->guardar($elemento->getCentro()->getx(), $elemento->getCentro()->getY());
           }
-  
         } elseif ($comandos[$i] == "derecha" || $comandos[$i] == "de") {
           if (is_numeric($comandos[($i + 1)])) {
             $elemento->setAngulo($comandos[($i + 1)]);
-           
           }
-  
         } elseif ($comandos[$i] == "izquierda" || $comandos[$i] == "iz") {
           if (is_numeric($comandos[($i + 1)])) {
             $elemento->setAngulo(- ($comandos[($i + 1)]));
-            
           }
-  
         } elseif ($comandos[$i] == "borrarpantalla" || $comandos[$i] == "bp") {
-          //¿Aqui ocultamos tambien la tortuga?
-          //Y tendriamos tambien que hacer algo parecido a lo que hace el boton de cerrar sesion
-          $elemento->mover(180, 180);
+          try {
+            $dsn = 'mysql:dbname=bdLogo;host=db';
+            $usuario = 'alumnado';
+            $clave = 'alumnado';
+
+            $bd = new PDO($dsn, $usuario, $clave);
+            $bd->exec("set character set utf8");
+            $resultado = $bd->query("delete from linea");
+            $bd->query("insert into linea (x1, y1, x2, y2, pintar) values (400, 250, 400, 250, 1);");
+
+            $bd->query("delete from puntos");
+          } catch (PDOException $e) {
+            print "    <p>Error: No puede conectarse con la base de datos.</p>\n";
+            print "    <p>Error: " . $e->getMessage() . "</p>\n";
+            exit();
+          }
+          $elemento->mover(400, 250);
           $elemento->resetAngulo();
-  
         } elseif ($comandos[$i] == "subirlapiz" || $comandos[$i] == "sl") {
-          //
-  
+          $elemento->setPintar(false);
         } elseif ($comandos[$i] == "bajarlapiz" || $comandos[$i] == "bl") {
-          //
-  
+          $elemento->setPintar(true);
         } elseif ($comandos[$i] == "ocultartortuga" || $comandos[$i] == "ot") {
           $elemento->setVisible(false);
-  
         } elseif ($comandos[$i] == "mostrartortuga" || $comandos[$i] == "mt") {
           $elemento->setVisible(true);
-  
         } elseif ($comandos[$i] == "casa") {
           $elemento->mover(400, 250);
           $elemento->resetAngulo();
-  
-        } elseif ($comandos[$i] == "repetir" || $comandos[$i] == "rp") {
+
+        } elseif ($comandos[$i] == "repetir" || $comandos[$i] == "rep") {
           if (is_numeric($comandos[($i + 1)])) {
-            // Aqui tenemos que filtrar el repeat (numero)[ ]
-            // Este comando seria algo asi
-            // repeat 4 [ ad 50 de 90 ad 50 ]
+            $n = ($i + 1);
+            //echo ($n);
+            if (($comandos[($i + 2)]) == "[") {
+              $inicio = array_search("[", ($comandos));
+              $fin = array_search("]", ($comandos));
+
+              for ($i = 0; $i <= $n; $i++) {
+
+                for ($e = $inicio + 1; $e < $fin; $e++) {
+
+                  if ($comandos[$e] == "adelante" || $comandos[$e] == "ad") {
+                    if (is_numeric($comandos[($e + 1)])) {
+                      $elemento->animar(($comandos[($e + 1)]));
+                      $elemento->guardar($elemento->getCentro()->getx(), $elemento->getCentro()->getY());
+                    }
+                  } elseif ($comandos[$e] == "atras" || $comandos[$e] == "at") {
+                    if (is_numeric($comandos[($e + 1)])) {
+                      $elemento->animar((-$comandos[($e + 1)]));
+                      $elemento->guardar($elemento->getCentro()->getx(), $elemento->getCentro()->getY());
+                    }
+                  } elseif ($comandos[$e] == "derecha" || $comandos[$e] == "de") {
+                    if (is_numeric($comandos[($e + 1)])) {
+                      $elemento->setAngulo($comandos[($e + 1)]);
+                    }
+                  } elseif ($comandos[$e] == "izquierda" || $comandos[$e] == "iz") {
+                    if (is_numeric($comandos[($e + 1)])) {
+                      $elemento->setAngulo(- ($comandos[($e + 1)]));
+                    }
+                  } elseif ($comandos[$e] == "borrarpantalla" || $comandos[$e] == "bp") {
+                    try {
+                      $dsn = 'mysql:dbname=bdLogo;host=db';
+                      $usuario = 'alumnado';
+                      $clave = 'alumnado';
+
+                      $bd = new PDO($dsn, $usuario, $clave);
+                      $bd->exec("set character set utf8");
+                      $resultado = $bd->query("delete from linea");
+                      $bd->query("insert into linea (x1, y1, x2, y2) values (400, 250, 400, 250);");
+
+                      $bd->query("delete from puntos");
+                    } catch (PDOException $e) {
+                      print "    <p>Error: No puede conectarse con la base de datos.</p>\n";
+                      print "    <p>Error: " . $e->getMessage() . "</p>\n";
+                      exit();
+                    }
+                    $elemento->mover(400, 250);
+                    $elemento->resetAngulo();
+                  } elseif ($comandos[$e] == "subirlapiz" || $comandos[$e] == "sl") {
+                    $elemento->setPintar(false);
+                  } elseif ($comandos[$e] == "bajarlapiz" || $comandos[$e] == "bl") {
+                    $elemento->setPintar(true);
+                  } elseif ($comandos[$e] == "ocultartortuga" || $comandos[$e] == "ot") {
+                    $elemento->setVisible(false);
+                  } elseif ($comandos[$e] == "mostrartortuga" || $comandos[$e] == "mt") {
+                    $elemento->setVisible(true);
+                  } elseif ($comandos[$e] == "casa") {
+                    $elemento->mover(400, 250);
+                    $elemento->resetAngulo();
+                  }
+                }
+              }
+            }
           }
         }
-      }   
+      }
     }
+  }
+
+  /* print_r($_SESSION['array']); */
+  include "./librerias/libreriamain1.php";
+  cabecera("Logo", "Aprende a usar LOGO");
+
+  foreach ($arrayfiguras->getArray() as $elemento) {
+
+/*     $elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]); Nos da error */
+    $elemento->dibujarLinea();
+    echo $elemento->dibujar();
+  }
+
+  include "./librerias/libreriamain2P.php";
+} elseif ($_SESSION['perfil'] == "Alumno") {
+
+
+   // VARIABLES SESIÓN
+   if (!isset($_SESSION['arrayfiguras'])) {
+    $arrayfiguras = new AppWebLogo();
+    $_SESSION['arrayfiguras'] = $arrayfiguras;
+    $tortuga = new Tortuga(400, 250, 0);
+    //$tortuga->guardar(400,250);
+    $arrayfiguras->aniadir($tortuga);
+  } else {
+    $arrayfiguras = $_SESSION['arrayfiguras'];
+  }
+
+  if (!isset($_SESSION['array'])) {
+    $array = [];
+    $_SESSION['array'] = $array;
+  } else {
+    $array = $_SESSION['array'];
+  }
+
+  if (!isset($_SESSION['comando'])) {
+    $arrayComandos = [];
+    $_SESSION['comando'] = $arrayComandos;
+  } else {
+    $arrayComandos = $_SESSION['comando'];
+  }
+
+  //COMANDOS
+  foreach ($arrayfiguras->getArray() as $elemento) {
+
+    $x = $elemento->getCentro()->getX();
+    $y = $elemento->getCentro()->getY();
+    $_SESSION['array'] = [$x, $y];
+  }
+
+  if (isset($_POST['comandos'])) {
+    $input = $_POST['comandos'];
+    $comandos = explode(" ", $input);
+
+
+    foreach ($arrayfiguras->getArray() as $elemento) {
+
+      for ($i = 0; $i < count($comandos); $i++) {
+        if ($comandos[$i] == "adelante" || $comandos[$i] == "ad") {
+          if (is_numeric($comandos[($i + 1)])) {
+            $elemento->animar(($comandos[($i + 1)]));
+            $elemento->guardar($elemento->getCentro()->getx(), $elemento->getCentro()->getY());
+          }
+        } elseif ($comandos[$i] == "atras" || $comandos[$i] == "at") {
+          if (is_numeric($comandos[($i + 1)])) {
+            $elemento->animar((-$comandos[($i + 1)]));
+            $elemento->guardar($elemento->getCentro()->getx(), $elemento->getCentro()->getY());
+          }
+        } elseif ($comandos[$i] == "derecha" || $comandos[$i] == "de") {
+          if (is_numeric($comandos[($i + 1)])) {
+            $elemento->setAngulo($comandos[($i + 1)]);
+          }
+        } elseif ($comandos[$i] == "izquierda" || $comandos[$i] == "iz") {
+          if (is_numeric($comandos[($i + 1)])) {
+            $elemento->setAngulo(- ($comandos[($i + 1)]));
+          }
+        } elseif ($comandos[$i] == "borrarpantalla" || $comandos[$i] == "bp") {
+          try {
+            $dsn = 'mysql:dbname=bdLogo;host=db';
+            $usuario = 'alumnado';
+            $clave = 'alumnado';
+
+            $bd = new PDO($dsn, $usuario, $clave);
+            $bd->exec("set character set utf8");
+            $resultado = $bd->query("delete from linea");
+            $bd->query("insert into linea (x1, y1, x2, y2, pintar) values (400, 250, 400, 250, 1);");
+
+            $bd->query("delete from puntos");
+          } catch (PDOException $e) {
+            print "    <p>Error: No puede conectarse con la base de datos.</p>\n";
+            print "    <p>Error: " . $e->getMessage() . "</p>\n";
+            exit();
+          }
+          $elemento->mover(400, 250);
+          $elemento->resetAngulo();
+        } elseif ($comandos[$i] == "subirlapiz" || $comandos[$i] == "sl") {
+          $elemento->setPintar(false);
+        } elseif ($comandos[$i] == "bajarlapiz" || $comandos[$i] == "bl") {
+          $elemento->setPintar(true);
+        } elseif ($comandos[$i] == "ocultartortuga" || $comandos[$i] == "ot") {
+          $elemento->setVisible(false);
+        } elseif ($comandos[$i] == "mostrartortuga" || $comandos[$i] == "mt") {
+          $elemento->setVisible(true);
+        } elseif ($comandos[$i] == "casa") {
+          $elemento->mover(400, 250);
+          $elemento->resetAngulo();
+
+        } elseif ($comandos[$i] == "repetir" || $comandos[$i] == "rep") {
+          if (is_numeric($comandos[($i + 1)])) {
+            $n = ($i + 1);
+            //echo ($n);
+            if (($comandos[($i + 2)]) == "[") {
+              $inicio = array_search("[", ($comandos));
+              $fin = array_search("]", ($comandos));
+
+              for ($i = 0; $i <= $n; $i++) {
+
+                for ($e = $inicio + 1; $e < $fin; $e++) {
+
+                  if ($comandos[$e] == "adelante" || $comandos[$e] == "ad") {
+                    if (is_numeric($comandos[($e + 1)])) {
+                      $elemento->animar(($comandos[($e + 1)]));
+                      $elemento->guardar($elemento->getCentro()->getx(), $elemento->getCentro()->getY());
+                    }
+                  } elseif ($comandos[$e] == "atras" || $comandos[$e] == "at") {
+                    if (is_numeric($comandos[($e + 1)])) {
+                      $elemento->animar((-$comandos[($e + 1)]));
+                      $elemento->guardar($elemento->getCentro()->getx(), $elemento->getCentro()->getY());
+                    }
+                  } elseif ($comandos[$e] == "derecha" || $comandos[$e] == "de") {
+                    if (is_numeric($comandos[($e + 1)])) {
+                      $elemento->setAngulo($comandos[($e + 1)]);
+                    }
+                  } elseif ($comandos[$e] == "izquierda" || $comandos[$e] == "iz") {
+                    if (is_numeric($comandos[($e + 1)])) {
+                      $elemento->setAngulo(- ($comandos[($e + 1)]));
+                    }
+                  } elseif ($comandos[$e] == "borrarpantalla" || $comandos[$e] == "bp") {
+                    try {
+                      $dsn = 'mysql:dbname=bdLogo;host=db';
+                      $usuario = 'alumnado';
+                      $clave = 'alumnado';
+
+                      $bd = new PDO($dsn, $usuario, $clave);
+                      $bd->exec("set character set utf8");
+                      $resultado = $bd->query("delete from linea");
+                      $bd->query("insert into linea (x1, y1, x2, y2) values (400, 250, 400, 250);");
+
+                      $bd->query("delete from puntos");
+                    } catch (PDOException $e) {
+                      print "    <p>Error: No puede conectarse con la base de datos.</p>\n";
+                      print "    <p>Error: " . $e->getMessage() . "</p>\n";
+                      exit();
+                    }
+                    $elemento->mover(400, 250);
+                    $elemento->resetAngulo();
+                  } elseif ($comandos[$e] == "subirlapiz" || $comandos[$e] == "sl") {
+                    $elemento->setPintar(false);
+                  } elseif ($comandos[$e] == "bajarlapiz" || $comandos[$e] == "bl") {
+                    $elemento->setPintar(true);
+                  } elseif ($comandos[$e] == "ocultartortuga" || $comandos[$e] == "ot") {
+                    $elemento->setVisible(false);
+                  } elseif ($comandos[$e] == "mostrartortuga" || $comandos[$e] == "mt") {
+                    $elemento->setVisible(true);
+                  } elseif ($comandos[$e] == "casa") {
+                    $elemento->mover(400, 250);
+                    $elemento->resetAngulo();
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* print_r($_SESSION['array']); */
+  include "./librerias/libreriamain1.php";
+  cabecera("Logo", "Aprende a usar LOGO");
+
+  foreach ($arrayfiguras->getArray() as $elemento) {
+
+/*     $elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]); Nos da error */
+    $elemento->dibujarLinea();
+    echo $elemento->dibujar();
+  }
+  include "./librerias/libreriamain2.php";
 }
-
-// print_r($_SESSION['comando']);
-print_r($_SESSION['array']);
-
-?>
-<!DOCTYPE html>
-<html lang="es">
-
-<head>
-  <meta charset="UTF-8">
-  <title>LOGO</title>
-  <style>
-    h2,
-    #svg,
-    #form {
-      text-align: center;
-    }
-  </style>
-</head>
-
-<body>
-  <h2>Aprende a usar LOGO</h2>
-  <div id="svg">
-    <svg width="800" height="500" style="background-color: #e7e7e7">
-
-
-      <?php
-      for ($i=0; $i<(count($_SESSION['array'])) ; $i++) { 
-        
-      }
-      foreach ($arrayfiguras->getArray() as $key =>$elemento) {
-        echo $elemento->dibujar();
-       $elemento->guardar($_SESSION['array'][0], $_SESSION['array'][1]);
-        $elemento->dibujarLinea();
-       
-      }
-      ?>
-      <!-- <line x1=150 y1=500 x2=400 y2=250 stroke="red" stroke-width=2 /> -->
-
-    </svg>
-  </div>
-  <div id="form">
-    <hr>
-    <form action="<?php echo $_SERVER['PHP_SELF'];?>" method="post">
-      <textarea name="comandos" id="comandos" cols="61" rows="5"></textarea><br>
-      <button type="submit" value="Enviar">Enviar</button>
-    </form>
-    <a href="./cerrrarSesion.php"><button>Cerrar sesión</button></a>
-   
-  </div>
-</body>
-
-</html>
-<?php
-echo "<pre>";
-print_r($arrayfiguras);
-echo "</pre>";
-
-//print_r($arrayfiguras);
